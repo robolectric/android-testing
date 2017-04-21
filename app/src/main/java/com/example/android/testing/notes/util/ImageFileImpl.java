@@ -30,14 +30,14 @@ import java.io.IOException;
 public class ImageFileImpl implements ImageFile {
 
     @VisibleForTesting
-    File mImageFile;
+    File mFile;
 
     @Override
     public void create(String name, String extension) throws IOException {
         File storageDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES);
 
-        mImageFile = File.createTempFile(
+        mFile = File.createTempFile(
                 name,  /* prefix */
                 extension,        /* suffix */
                 storageDir      /* directory */
@@ -46,17 +46,18 @@ public class ImageFileImpl implements ImageFile {
 
     @Override
     public boolean exists() {
-        return null != mImageFile && mImageFile.exists();
+        return null != mFile && mFile.exists();
     }
 
     @Override
     public void delete() {
-        mImageFile = null;
+        mFile.delete();
+        mFile = null;
     }
 
     @Override
     public String getPath() {
-        return Uri.fromFile(mImageFile).toString();
+        return Uri.fromFile(mFile).toString();
     }
 
 }

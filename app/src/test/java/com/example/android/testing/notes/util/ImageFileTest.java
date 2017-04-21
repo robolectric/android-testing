@@ -19,23 +19,15 @@ package com.example.android.testing.notes.util;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-import android.os.Environment;
+import org.robolectric.RobolectricTestRunner;
 
 import java.io.File;
-import java.io.IOException;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 /**
  * Unit tests for the implementation of {@link ImageFileImpl}.
@@ -52,57 +44,38 @@ import static org.powermock.api.mockito.PowerMockito.when;
  * sign of a bad code design. Nevertheless it can be handy while working with third party
  * dependencies, like the android.jar.
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Environment.class, File.class}) // Prepare the static classes for mocking
+@RunWith(RobolectricTestRunner.class)
 public class ImageFileTest {
 
-    @Mock
-    private File mDirectory;
-
-    @Mock
-    private File mImageFile;
-
-    private ImageFileImpl mFileHelper;
+    private ImageFileImpl mImageFile;
 
     @Before
-    public void createImageFile() throws IOException {
+    public void createImageFile() throws Exception {
         // Get a reference to the class under test
-        mFileHelper = new ImageFileImpl();
-
-        // Setup required static mocking
-        withStaticallyMockedEnvironmentAndFileApis();
+        mImageFile = new ImageFileImpl();
     }
 
     @Test
-    public void create_SetsImageFile() throws IOException {
+    public void create_SetsImageFile() throws Exception {
         // When file helper is asked to create a file
-        mFileHelper.create("Name", "Extension");
+        mImageFile.create("Name", "Extension");
 
         // Then the created file is stored inside the image file.
-        assertThat(mFileHelper.mImageFile, is(notNullValue()));
+        assertThat(mImageFile.mFile, is(notNullValue()));
+        assertThat(mImageFile.mFile.getName(), containsString("Name"));
+        assertThat(mImageFile.mFile.getName(), containsString("Extension"));
     }
 
     @Test
-    public void deleteImageFile() {
+    public void deleteImageFile() throws Exception {
+        mImageFile.create("Name", "Extension");
+        File file = mImageFile.mFile;
+
         // When file should be deleted
-        mFileHelper.delete();
+        mImageFile.delete();
 
         // Then stored file is deleted
-        assertThat(mFileHelper.mImageFile, is(nullValue()));
-    }
-
-    /**
-     * Mock static methods in android.jar
-     */
-    private void withStaticallyMockedEnvironmentAndFileApis() throws IOException {
-        // Setup mocking for Environment and File classes
-        mockStatic(Environment.class, File.class);
-
-        // Make the Environment class return a mocked external storage directory
-        when(Environment.getExternalStorageDirectory())
-                .thenReturn(mDirectory);
-
-        // Make the File class return a mocked image file
-        when(File.createTempFile(anyString(), anyString(), eq(mDirectory))).thenReturn(mImageFile);
+        assertThat(file.exists(), is(false));
+        assertThat(mImageFile.mFile, is(nullValue()));
     }
 }
